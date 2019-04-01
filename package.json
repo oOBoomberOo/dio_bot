@@ -1,0 +1,17 @@
+{
+  "name": "dio_bot",
+  "version": "1.0.0",
+  "description": "You were expecting description but it was me, DIO!",
+  "main": "main.js",
+  "scripts": {
+    "start": "node main.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Boomber",
+  "license": "GPL-3.0",
+  "dependencies": {
+    "discord.js": "^11.4.2",
+    "jsonfile": "^5.0.0",
+    "readjson": "^1.1.4"
+  }
+}
