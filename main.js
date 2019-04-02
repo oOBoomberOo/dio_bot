@@ -76,7 +76,7 @@ function cmdDio(message) {
 				mResponse = responseList[parseInt(cmd)];
 			}
 			else {
-				mResponse = {message: errorList['invalid-command'].replace('%s', cmd)};
+				mResponse = {message: errorList['invalid-command'].message.replace('%s', cmd)};
 				logs.push(`${getCurrentTime()}: ${author.username} execute invalid command: !dio ${cmd}`);
 			}
 			break;
@@ -85,6 +85,7 @@ function cmdDio(message) {
 			jsonResponse = getJSON('https://raw.githubusercontent.com/oOBoomberOo/dio_bot/master/response_list.json').then(response => {
 				responseList = response['values'];
 				errorList = response['errors'];
+				console.log(responseList);
 				return response;
 			})
 			.catch(error => {
@@ -92,7 +93,7 @@ function cmdDio(message) {
 			});
 			break;
 		default:
-			mResponse = {message: errorList['invalid-command'].replace('%s', cmd)};
+			mResponse = {message: errorList['invalid-command'].message.replace('%s', cmd)};
 			logs.push(`${getCurrentTime()}: ${author.username} execute invalid command: !dio ${cmd}`);
 	}
 	sendMessage(channel, mResponse);
