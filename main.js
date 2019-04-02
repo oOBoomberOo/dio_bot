@@ -24,7 +24,7 @@ bot.on('message', message => {
 		let index = Math.floor(Math.random() * responseList.length);
 		sendMessage(bot, channel, responseList[index]);
 	}
-	else if (content.match(/!dio/i) && !author.bot) {
+	else if (content.search(/!dio/i) === 0 && !author.bot) {
 		cmd = content.substring(content.search(/ /) + 1);
 		if (cmd.match(/\d/g)) {
 			let pInt = parseInt(cmd);
