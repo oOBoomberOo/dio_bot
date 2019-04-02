@@ -42,6 +42,8 @@ bot.on('message', message => {
 			responseList = jsonfile.readFileSync(response_list)['values'];
 		}
 		else {
+			const m = errorList['invalid-command'];
+			sendMessage(bot, channel, {message: m.message.replace('%s', cmd)});
 			console.log(author.username + ' entered invalid command: ' + message.content);
 		}
 	}
