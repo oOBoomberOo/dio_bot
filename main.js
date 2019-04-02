@@ -18,7 +18,7 @@ bot.on('message', message => {
 	let author = message.author;
 	let channel = message.channel;
 	let content = message.content;
-	let regex = /(?!.*`)\Wdio[!?](?!.*`)/gi;
+	let regex = /(?!.*`)\bdio[!?](?!.*`)/gi;
 
 	if (content.search(regex) >= 0 && !author.bot) {
 		let index = Math.floor(Math.random() * responseList.length);
