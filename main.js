@@ -1,10 +1,9 @@
 const discord = require('discord.js');
 const auth = require('./auth.json');
-const jsonfile = require('jsonfile');
 const writeFile = require('write');
 const getJSON = require('get-json');
-const response_list = './response_list.json';
-let promise = getJSON('https://raw.githubusercontent.com/oOBoomberOo/dio_bot/master/response_list.json');
+const response_list = 'https://raw.githubusercontent.com/oOBoomberOo/dio_bot/master/response_list.json';
+let promise = getJSON(response_list);
 let responseList = [];
 let errorList = [];
 let logs = [];
@@ -31,7 +30,7 @@ promise.then(response => {
 		if (content.search(dio_regex) >= 0 && !author.bot) {
 			callDio(message);
 		}
-		else if (content.search(cmd_regex) === 0 && !author.bot) {
+		else if (content.search(cmd_regex) === 0 && !author.bot && content.split(' ').length > 1) {
 			cmdDio(message);
 		}
 
@@ -53,7 +52,6 @@ promise.then(response => {
 function callDio(message) {
 	let author = message.author;
 	let channel = message.channel;
-	let content = message.content;
 
 	logs.push(`${getCurrentTime()}: ${author.username} execute dio! command.`);
 	let index = Math.floor(Math.random() * responseList.length);
@@ -82,10 +80,10 @@ function cmdDio(message) {
 			break;
 		case /restart/.test(cmd):
 			mResponse.message = 'Restarting...';
-			jsonResponse = getJSON('https://raw.githubusercontent.com/oOBoomberOo/dio_bot/master/response_list.json').then(response => {
+			getJSON(response_list)
+			.then(response => {
 				responseList = response['values'];
 				errorList = response['errors'];
-				console.log(responseList);
 				return response;
 			})
 			.catch(error => {
@@ -111,14 +109,15 @@ function sendMessage(channel, message) {
 function getCurrentTime() {
 	let date = new Date();
 	let hour = date.getHours();
-	hour = (hour < 10 ? '0': '') + hour;
 	let minute = date.getMinutes();
-	minute = (minute < 10 ? '0': '') + minute;
 	let second = date.getSeconds();
-	second = (second < 10 ? '0': '') + second;
 	let day = date.getDate();
-	day = (day < 10 ? '0': '') + day;
 	let month = date.getMonth();
+
+	hour = (hour < 10 ? '0': '') + hour;
+	minute = (minute < 10 ? '0': '') + minute;
+	second = (second < 10 ? '0': '') + second;
+	day = (day < 10 ? '0': '') + day;
 	
 	return `${day}/${month} [${hour}:${minute}:${second}]`;
 }
@@ -126,9 +125,10 @@ function getCurrentTime() {
 function getCurrentDate() {
 	let date = new Date();
 	let day = date.getDate();
-	day = (day < 10 ? '0': '') + day;
 	let month = date.getMonth();
 	let year = date.getFullYear();
+
+	day = (day < 10 ? '0': '') + day;
 	
 	return `${year}_${month}_${day}`;
 }
