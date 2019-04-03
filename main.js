@@ -10,6 +10,7 @@ let logs = [];
 let max_logs = 5000;
 let bot = new discord.Client();
 
+// Start bot only when promise returned
 promise.then(response => {
 	responseList = response['values'];
 	errorList = response['errors'];
@@ -18,6 +19,7 @@ promise.then(response => {
 	
 	bot.on('ready', () => { 
 		console.log('Bot logged in as: ' + bot.user.username + '<' + bot.user.id + '>');
+		logs.push(`${getCurrentTime()}: Bot logged in as: ${bot.user.username}<${bot.user.id}>`);
 	});
 	
 	bot.on('message', message => {
@@ -47,8 +49,18 @@ promise.then(response => {
 		}
 
 	});
+
+	bot.on('error', error => {
+		console.log(error);
+		logs.push(`${getCurrentTime}: ${error}`);
+	})
+})
+.catch(error => {
+	console.log(error);
+	logs.push(`${getCurrentTime}: ${error}`);
 });
 
+// Handle dio! command
 function callDio(message) {
 	let author = message.author;
 	let channel = message.channel;
@@ -58,6 +70,7 @@ function callDio(message) {
 	sendMessage(channel, responseList[index]);
 }
 
+// Handle !dio command
 function cmdDio(message) {
 	let author = message.author;
 	let channel = message.channel;
@@ -97,6 +110,7 @@ function cmdDio(message) {
 	sendMessage(channel, mResponse);
 }
 
+// Handle object {message: "foo", file: "bar"} and send them
 function sendMessage(channel, message) {
 	if (message.file !== '' || message.file != undefined || message.file != null) {
 		bot.channels.get(channel.id).send(message.message, {file: message.file});
@@ -106,6 +120,7 @@ function sendMessage(channel, message) {
 	}
 }
 
+// Return current time in format DD/M [hh:mm:ss]
 function getCurrentTime() {
 	let date = new Date();
 	let hour = date.getHours();
@@ -122,6 +137,7 @@ function getCurrentTime() {
 	return `${day}/${month} [${hour}:${minute}:${second}]`;
 }
 
+// Return current date in format YYYY_MM_DD
 function getCurrentDate() {
 	let date = new Date();
 	let day = date.getDate();
@@ -129,6 +145,7 @@ function getCurrentDate() {
 	let year = date.getFullYear();
 
 	day = (day < 10 ? '0': '') + day;
+	month = (month < 10 ? '0': '') + day;
 	
 	return `${year}_${month}_${day}`;
 }
