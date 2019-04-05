@@ -44,20 +44,20 @@ promise.then(response => {
 				logs = [];
 			})
 			.catch(error => {
-				console.log(error);
+				console.log(error.message);
 			});
 		}
 
 	});
 
 	bot.on('error', error => {
-		console.log(error);
-		logs.push(`${getCurrentTime}: ${error}`);
+		console.log(`${getCurrentTime}: ${error.message}`);
+		logs.push(`${getCurrentTime}: ${error.message}`);
 	})
 })
 .catch(error => {
-	console.log(error);
-	logs.push(`${getCurrentTime}: ${error}`);
+	console.log(`${getCurrentTime}: ${error.message}`);
+	logs.push(`${getCurrentTime}: ${error.message}`);
 });
 
 // Handle dio! command
@@ -65,6 +65,7 @@ function callDio(message) {
 	let author = message.author;
 	let channel = message.channel;
 
+	console.log(`${getCurrentTime()}: ${author.username} execute dio! command.`);
 	logs.push(`${getCurrentTime()}: ${author.username} execute dio! command.`);
 	let index = Math.floor(Math.random() * responseList.length);
 	sendMessage(channel, responseList[index]);
@@ -78,6 +79,7 @@ function cmdDio(message) {
 
 	let cmd = content.substring(content.search(/ /) + 1);
 	let mResponse = {message: '', file: ''};
+	console.log(`${getCurrentTime()}: ${author.username} execute !dio ${cmd} command.`);
 	logs.push(`${getCurrentTime()}: ${author.username} execute !dio ${cmd} command.`);
 	
 	// Regex testing
