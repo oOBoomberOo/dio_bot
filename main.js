@@ -8,7 +8,24 @@ let responseList = [];
 let errorList = [];
 let logs = [];
 let max_logs = 5000;
+let schedule_backup_time = 12*60*60*1000;
 let bot = new discord.Client();
+
+let schedule_backup = function() {
+	console.log(`Begin schedule backup...`);
+	let log_content = logs.join('\n');
+	writeFile(`./logs/${getCurrentDate()}.log`, log_content)
+	.then(() => {
+		logs = [];
+	})
+	.catch(error => {
+		console.log(`${getCurrentTime()}: ${error.message} / ${error.error}`);
+	});
+	console.log(`Will backup again in ${schedule_backup_time}ms or ${schedule_backup_time/(1000*60)} minutes`);
+	setTimeout(schedule_backup, schedule_backup_time);
+}
+
+schedule_backup();
 
 // Start bot only when promise returned
 promise.then(response => {
@@ -147,7 +164,7 @@ function getCurrentDate() {
 	let year = date.getFullYear();
 
 	day = (day < 10 ? '0': '') + day;
-	month = (month < 10 ? '0': '') + day;
+	month = (month < 10 ? '0': '') + month;
 	
 	return `${year}_${month}_${day}`;
 }
