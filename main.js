@@ -14,12 +14,14 @@ let bot = new discord.Client();
 let schedule_backup = function() {
 	console.log(`Begin schedule backup...`);
 	let log_content = logs.join('\n');
-	writeFile(`./logs/${getCurrentDate()}.log`, log_content)
+	let {d, mn, h, m, s} = getCurrentTime();
+	let {day, month, year} = getCurrentDate();
+	writeFile(`./logs/${year}_${month}_${day}-${h}_${m}.log`, log_content)
 	.then(() => {
 		logs = [];
 	})
 	.catch(error => {
-		console.log(`${getCurrentTime()}: ${error.message} / ${error.error}`);
+		console.log(`${d}/${mn} [${h}:${m}:${s}]: ${error.message} / ${error.error}`);
 	});
 	console.log(`Will backup again in ${schedule_backup_time}ms or ${schedule_backup_time/(1000*60)} minutes`);
 	setTimeout(schedule_backup, schedule_backup_time);
@@ -35,8 +37,9 @@ promise.then(response => {
 	bot.login(auth.token)
 	
 	bot.on('ready', () => { 
+		let {d, mn, h, m, s} = getCurrentTime();
 		console.log('Bot logged in as: ' + bot.user.username + '<' + bot.user.id + '>');
-		logs.push(`${getCurrentTime()}: Bot logged in as: ${bot.user.username}<${bot.user.id}>`);
+		logs.push(`${d}/${mn} [${h}:${m}:${s}]: Bot logged in as: ${bot.user.username}<${bot.user.id}>`);
 	});
 	
 	bot.on('message', message => {
@@ -56,25 +59,31 @@ promise.then(response => {
 		if (logs.length > max_logs) {
 			console.log('Log reach limit write current log to /logs/');
 			let log_content = logs.join('\n');
-			writeFile(`./logs/${getCurrentDate()}.log`, log_content)
+			let {d, mn, h, m, s} = getCurrentTime();
+			let {day, month, year} = getCurrentDate();
+			writeFile(`./logs/${year}_${month}_${day}-${h}_${m}.log`, log_content)
 			.then(() => {
 				logs = [];
 			})
 			.catch(error => {
-				console.log(`${getCurrentTime()}: ${error.message} / ${error.error}`);
+				console.log(`${d}/${mn} [${h}:${m}:${s}]: ${error.message} / ${error.error}`);
 			});
 		}
 
 	});
 
 	bot.on('error', error => {
-		console.log(`${getCurrentTime()}: ${error.message} / ${error.error}`);
-		logs.push(`${getCurrentTime()}: ${error.message} / ${error.error}`);
+		let {d, mn, h, m, s} = getCurrentTime();
+		let error_message = `${d}/${mn} [${h}:${m}:${s}]: ${error.message} / ${error.error}`;
+		console.log(error_message);
+		logs.push(error_message);
 	})
 })
 .catch(error => {
-	console.log(`${getCurrentTime()}: ${error.message} / ${error.error}`);
-	logs.push(`${getCurrentTime()}: ${error.message} / ${error.error}`);
+	let {d, mn, h, m, s} = getCurrentTime();
+	let error_message = `${d}/${mn} [${h}:${m}:${s}]: ${error.message} / ${error.error}`;
+	console.log(error_message);
+	logs.push(error_message);
 });
 
 // Handle dio! command
@@ -82,8 +91,10 @@ function callDio(message) {
 	let author = message.author;
 	let channel = message.channel;
 
-	console.log(`${getCurrentTime()}: ${author.username} execute dio! command.`);
-	logs.push(`${getCurrentTime()}: ${author.username} execute dio! command.`);
+	let {d, mn, h, m, s} = getCurrentTime();
+	let log_message = `${d}/${mn} [${h}:${m}:${s}]: ${author.username} execute dio! command.`;
+	console.log(log_message);
+	logs.push(log_message);
 	let index = Math.floor(Math.random() * responseList.length);
 	sendMessage(channel, responseList[index]);
 }
@@ -96,8 +107,10 @@ function cmdDio(message) {
 
 	let cmd = content.substring(content.search(/ /) + 1);
 	let mResponse = {message: '', file: ''};
-	console.log(`${getCurrentTime()}: ${author.username} execute !dio ${cmd} command.`);
-	logs.push(`${getCurrentTime()}: ${author.username} execute !dio ${cmd} command.`);
+	let {d, mn, h, m, s} = getCurrentTime();
+	let log_message = `${d}/${mn} [${h}:${m}:${s}]: ${author.username} execute !dio ${cmd} command.`;
+	console.log(log_message);
+	logs.push(log_message);
 	
 	// Regex testing
 	switch(true) {
@@ -106,8 +119,11 @@ function cmdDio(message) {
 				mResponse = responseList[parseInt(cmd)];
 			}
 			else {
+				let {d, mmnonth, h, m, s} = getCurrentTime();
+				let log_message = `${d}/${mn} [${h}:${m}:${s}]: ${author.username} execute invalid command: !dio ${cmd}`;
 				mResponse = {message: errorList['invalid-command'].message.replace('%s', cmd)};
-				logs.push(`${getCurrentTime()}: ${author.username} execute invalid command: !dio ${cmd}`);
+				console.log(log_message);
+				logs.push(log_message);
 			}
 			break;
 		case /restart/.test(cmd):
@@ -124,7 +140,9 @@ function cmdDio(message) {
 			break;
 		default:
 			mResponse = {message: errorList['invalid-command'].message.replace('%s', cmd)};
-			logs.push(`${getCurrentTime()}: ${author.username} execute invalid command: !dio ${cmd}`);
+			let {d, mn, h, m, s} = getCurrentTime();
+			let log_message = `${d}/${mn} [${h}:${m}:${s}]: ${author.username} execute invalid command: !dio ${cmd}`;
+			logs.push(log_message);
 	}
 	sendMessage(channel, mResponse);
 }
@@ -139,7 +157,7 @@ function sendMessage(channel, message) {
 	}
 }
 
-// Return current time in format DD/M [hh:mm:ss]
+// Return current time in format {DD, M, hh, mm, ss}
 function getCurrentTime() {
 	let date = new Date();
 	let hour = date.getHours();
@@ -153,10 +171,10 @@ function getCurrentTime() {
 	second = (second < 10 ? '0': '') + second;
 	day = (day < 10 ? '0': '') + day;
 	
-	return `${day}/${month} [${hour}:${minute}:${second}]`;
+	return {d: day, mn: month, h: hour, m: minute, s: second};
 }
 
-// Return current date in format YYYY_MM_DD
+// Return current date in format {YYYY, MM, DD}
 function getCurrentDate() {
 	let date = new Date();
 	let day = date.getDate();
@@ -166,5 +184,5 @@ function getCurrentDate() {
 	day = (day < 10 ? '0': '') + day;
 	month = (month < 10 ? '0': '') + month;
 	
-	return `${year}_${month}_${day}`;
+	return {day: day, month: month, year: year};
 }
