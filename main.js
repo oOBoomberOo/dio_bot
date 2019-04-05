@@ -44,20 +44,20 @@ promise.then(response => {
 				logs = [];
 			})
 			.catch(error => {
-				console.log(error.message);
+				console.log(`${getCurrentTime()}: ${error.message} / ${error.error}`);
 			});
 		}
 
 	});
 
 	bot.on('error', error => {
-		console.log(`${getCurrentTime}: ${error.message}`);
-		logs.push(`${getCurrentTime}: ${error.message}`);
+		console.log(`${getCurrentTime()}: ${error.message} / ${error.error}`);
+		logs.push(`${getCurrentTime()}: ${error.message} / ${error.error}`);
 	})
 })
 .catch(error => {
-	console.log(`${getCurrentTime}: ${error.message}`);
-	logs.push(`${getCurrentTime}: ${error.message}`);
+	console.log(`${getCurrentTime()}: ${error.message} / ${error.error}`);
+	logs.push(`${getCurrentTime()}: ${error.message} / ${error.error}`);
 });
 
 // Handle dio! command
