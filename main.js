@@ -1,7 +1,7 @@
 const discord = require('discord.js');
-const auth = require('./auth.json');
 const writeFile = require('write');
 const getJSON = require('get-json');
+const auth = require('./auth.json');
 const response_list = 'https://raw.githubusercontent.com/oOBoomberOo/dio_bot/master/response_list.json';
 let promise = getJSON(response_list);
 let responseList = [];
@@ -11,25 +11,7 @@ let max_logs = 5000;
 let schedule_backup_time = 12*60*60*1000;
 let bot = new discord.Client();
 
-let schedule_backup = function() {
-	console.log(`Begin schedule backup...`);
-	let log_content = logs.join('\n');
-	let {d, mn, h, m, s} = getCurrentTime();
-	let {day, month, year} = getCurrentDate();
-	writeFile(`./logs/${year}_${month}_${day}-${h}_${m}.log`, log_content)
-	.then(() => {
-		logs = [];
-	})
-	.catch(error => {
-		console.log(`${d}/${mn} [${h}:${m}:${s}]: ${error.message} / ${error.error}`);
-	});
-	console.log(`Will backup again in ${schedule_backup_time}ms or ${schedule_backup_time/(1000*60)} minutes`);
-	setTimeout(schedule_backup, schedule_backup_time);
-}
-
-schedule_backup();
-
-// Start bot only when promise returned
+// * Start bot only when promise returned
 promise.then(response => {
 	responseList = response['values'];
 	errorList = response['errors'];
@@ -37,9 +19,8 @@ promise.then(response => {
 	bot.login(auth.token)
 	
 	bot.on('ready', () => { 
-		let {d, mn, h, m, s} = getCurrentTime();
-		console.log('Bot logged in as: ' + bot.user.username + '<' + bot.user.id + '>');
-		logs.push(`${d}/${mn} [${h}:${m}:${s}]: Bot logged in as: ${bot.user.username}<${bot.user.id}>`);
+		logging(`Bot logged in as ${bot.user.username}<${bot.user.id}>`);
+		schedule_backup();
 	});
 	
 	bot.on('message', message => {
@@ -49,6 +30,10 @@ promise.then(response => {
 		let dio_regex = /(?!.*`)\bdio[!?](?!.*`)/gi;
 		let cmd_regex = /!dio/i;
 		
+		if (channel.type === 'dm') {
+			logging(`${author.username}#${author.tag}[DM] -> ${content}`);
+		}
+
 		if (content.search(dio_regex) >= 0 && !author.bot) {
 			callDio(message);
 		}
@@ -57,49 +42,63 @@ promise.then(response => {
 		}
 
 		if (logs.length > max_logs) {
-			console.log('Log reach limit write current log to /logs/');
-			let log_content = logs.join('\n');
-			let {d, mn, h, m, s} = getCurrentTime();
-			let {day, month, year} = getCurrentDate();
-			writeFile(`./logs/${year}_${month}_${day}-${h}_${m}.log`, log_content)
-			.then(() => {
-				logs = [];
-			})
-			.catch(error => {
-				console.log(`${d}/${mn} [${h}:${m}:${s}]: ${error.message} / ${error.error}`);
-			});
+			backup(logs);
 		}
 
 	});
 
 	bot.on('error', error => {
-		let {d, mn, h, m, s} = getCurrentTime();
-		let error_message = `${d}/${mn} [${h}:${m}:${s}]: ${error.message} / ${error.error}`;
-		console.log(error_message);
-		logs.push(error_message);
+		logging(`${error.message}: ${error.error}`);
 	})
 })
 .catch(error => {
-	let {d, mn, h, m, s} = getCurrentTime();
-	let error_message = `${d}/${mn} [${h}:${m}:${s}]: ${error.message} / ${error.error}`;
-	console.log(error_message);
-	logs.push(error_message);
+	logging(`${error.message}: ${error.error}`);
 });
 
-// Handle dio! command
+// * schedule a backup
+function schedule_backup() {
+	console.log(`Begin schedule backup...`);
+	backup(logs);
+	console.log(`Will backup again in ${schedule_backup_time}ms or ${schedule_backup_time/(1000*60)} minutes`);
+	setTimeout(schedule_backup, schedule_backup_time);
+}
+
+// * perform backup and clear logs
+function backup(logs) {
+	console.log('Log reach limit write current log to /logs/');
+	let log_content = logs.join('\n');
+	let {d, mn, h, m, s} = getCurrentTime();
+	let {day, month, year} = getCurrentDate();
+	writeFile(`./logs/${year}_${month}_${day}-${h}_${m}.log`, log_content)
+	.then(() => {
+		logs = [];
+	})
+	.catch(error => {
+		logging(`${error.message}: ${error.error}`);
+	});
+}
+
+// * log message
+function logging(message) {
+	let {d, mn, h, m, s} = getCurrentTime();
+	let error_message = `${d}/${mn} [${h}:${m}:${s}]: ${message}`;
+	console.log(error_message);
+	logs.push(error_message);
+}
+
+
+// * Handle dio! command
 function callDio(message) {
 	let author = message.author;
 	let channel = message.channel;
 
-	let {d, mn, h, m, s} = getCurrentTime();
-	let log_message = `${d}/${mn} [${h}:${m}:${s}]: ${author.username} execute dio! command.`;
-	console.log(log_message);
-	logs.push(log_message);
+	logging(`${author.username}#${author.tag} execute dio! command`);
 	let index = Math.floor(Math.random() * responseList.length);
 	sendMessage(channel, responseList[index]);
 }
 
-// Handle !dio command
+
+// * Handle !dio command
 function cmdDio(message) {
 	let author = message.author;
 	let channel = message.channel;
@@ -107,10 +106,7 @@ function cmdDio(message) {
 
 	let cmd = content.substring(content.search(/ /) + 1);
 	let mResponse = {message: '', file: ''};
-	let {d, mn, h, m, s} = getCurrentTime();
-	let log_message = `${d}/${mn} [${h}:${m}:${s}]: ${author.username} execute !dio ${cmd} command.`;
-	console.log(log_message);
-	logs.push(log_message);
+	logging(`${author.username}#${author.tag} execute !dio ${cmd} command`);
 	
 	// Regex testing
 	switch(true) {
@@ -119,11 +115,8 @@ function cmdDio(message) {
 				mResponse = responseList[parseInt(cmd)];
 			}
 			else {
-				let {d, mn, h, m, s} = getCurrentTime();
-				let log_message = `${d}/${mn} [${h}:${m}:${s}]: ${author.username} execute invalid command: !dio ${cmd}`;
 				mResponse = {message: errorList['invalid-command'].message.replace('%s', cmd)};
-				console.log(log_message);
-				logs.push(log_message);
+				logging(`${author.username}#${author.tag} execute invalid command -> !dio ${cmd}`);
 			}
 			break;
 		case /restart/.test(cmd):
@@ -132,6 +125,7 @@ function cmdDio(message) {
 			.then(response => {
 				responseList = response['values'];
 				errorList = response['errors'];
+				backup(logs);
 				return response;
 			})
 			.catch(error => {
@@ -140,14 +134,13 @@ function cmdDio(message) {
 			break;
 		default:
 			mResponse = {message: errorList['invalid-command'].message.replace('%s', cmd)};
-			let {d, mn, h, m, s} = getCurrentTime();
-			let log_message = `${d}/${mn} [${h}:${m}:${s}]: ${author.username} execute invalid command: !dio ${cmd}`;
-			logs.push(log_message);
+			logging(`${author.username}#${author.tag} execute invalid command -> !dio ${cmd}`);
 	}
 	sendMessage(channel, mResponse);
 }
 
-// Handle object {message: "foo", file: "bar"} and send them
+
+// * Handle object {message: "foo", file: "bar"} and send them
 function sendMessage(channel, message) {
 	if (message.file !== '' || message.file != undefined || message.file != null) {
 		bot.channels.get(channel.id).send(message.message, {file: message.file});
@@ -157,7 +150,8 @@ function sendMessage(channel, message) {
 	}
 }
 
-// Return current time in format {DD, M, hh, mm, ss}
+
+// * Return current time in format {DD, M, hh, mm, ss}
 function getCurrentTime() {
 	let date = new Date();
 	let hour = date.getHours();
@@ -174,7 +168,8 @@ function getCurrentTime() {
 	return {d: day, mn: month, h: hour, m: minute, s: second};
 }
 
-// Return current date in format {YYYY, MM, DD}
+
+// * Return current date in format {YYYY, MM, DD}
 function getCurrentDate() {
 	let date = new Date();
 	let day = date.getDate();
