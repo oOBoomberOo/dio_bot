@@ -119,7 +119,7 @@ function cmdDio(message) {
 				mResponse = responseList[parseInt(cmd)];
 			}
 			else {
-				let {d, mmnonth, h, m, s} = getCurrentTime();
+				let {d, mn, h, m, s} = getCurrentTime();
 				let log_message = `${d}/${mn} [${h}:${m}:${s}]: ${author.username} execute invalid command: !dio ${cmd}`;
 				mResponse = {message: errorList['invalid-command'].message.replace('%s', cmd)};
 				console.log(log_message);
