@@ -30,10 +30,6 @@ promise.then(response => {
 		let dio_regex = /(?!.*`)\bdio[!?](?!.*`)/gi;
 		let cmd_regex = /!dio/i;
 		
-		if (channel.type === 'dm' && !author.bot) {
-			logging(`${author.tag}[DM] -> ${content}`);
-		}
-
 		if (content.search(dio_regex) >= 0 && !author.bot) {
 			callDio(message);
 		}
@@ -119,8 +115,9 @@ function logging(message) {
 function callDio(message) {
 	let author = message.author;
 	let channel = message.channel;
+	let attachment = channel.type === 'dm' ? 'DM': `${message.guild.name}`;
 
-	logging(`${author.tag} execute dio! command`);
+	logging(`${author.tag}<${attachment}> execute dio! command`);
 	let index = Math.floor(Math.random() * responseList.length);
 	sendMessage(channel, responseList[index]);
 }
@@ -132,9 +129,10 @@ function cmdDio(message) {
 	let channel = message.channel;
 	let content = message.content;
 
+	let attachment = channel.type === 'dm' ? 'DM': `${message.guild.name}`;
 	let cmd = content.substring(content.search(/ /) + 1);
 	let mResponse = {message: '', file: ''};
-	logging(`${author.tag} execute !dio ${cmd} command`);
+	logging(`${author.tag}<${attachment}> execute !dio ${cmd} command`);
 	
 	// Regex testing
 	switch(true) {
@@ -144,7 +142,7 @@ function cmdDio(message) {
 			}
 			else {
 				mResponse = {message: errorList['invalid-command'].message.replace('%s', cmd)};
-				logging(`${author.tag} execute invalid command -> !dio ${cmd}`);
+				logging(`${author.tag}<${attachment}> execute invalid command -> !dio ${cmd}`);
 			}
 			break;
 		case /restart/.test(cmd):
@@ -162,7 +160,7 @@ function cmdDio(message) {
 			break;
 		default:
 			mResponse = {message: errorList['invalid-command'].message.replace('%s', cmd)};
-			logging(`${author.tag} execute invalid command -> !dio ${cmd}`);
+			logging(`${author.tag}<${attachment}> execute invalid command -> !dio ${cmd}`);
 	}
 	sendMessage(channel, mResponse);
 }
