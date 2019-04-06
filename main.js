@@ -20,7 +20,7 @@ promise.then(response => {
 	
 	bot.on('ready', () => { 
 		logging(`Bot logged in as ${bot.user.username}<${bot.user.id}>`);
-		schedule_backup();
+		schedule_backup(logs);
 	});
 	
 	bot.on('message', message => {
@@ -30,8 +30,8 @@ promise.then(response => {
 		let dio_regex = /(?!.*`)\bdio[!?](?!.*`)/gi;
 		let cmd_regex = /!dio/i;
 		
-		if (channel.type === 'dm') {
-			logging(`${author.username}#${author.tag}[DM] -> ${content}`);
+		if (channel.type === 'dm' && !author.bot) {
+			logging(`${author.tag}[DM] -> ${content}`);
 		}
 
 		if (content.search(dio_regex) >= 0 && !author.bot) {
@@ -42,6 +42,7 @@ promise.then(response => {
 		}
 
 		if (logs.length > max_logs) {
+			console.log('Log reach limit write current log to /logs/');
 			backup(logs);
 		}
 
@@ -55,23 +56,50 @@ promise.then(response => {
 	logging(`${error.message}: ${error.error}`);
 });
 
-// * schedule a backup
-function schedule_backup() {
-	console.log(`Begin schedule backup...`);
+process.on('cleanup', () => {
 	backup(logs);
+});
+
+// Copied from stackoverflow
+// do app specific cleaning before exiting
+process.on('exit', () => {
+	process.emit('cleanup');
+});
+
+// catch ctrl+c event and exit normally
+process.on('SIGINT', () => {
+	console.log('Ctrl-C...');
+	process.emit('cleanup');
+	process.exit(2);
+});
+
+//catch uncaught exceptions, trace, then exit normally
+process.on('uncaughtException', event => {
+	console.log('Uncaught Exception...');
+	console.log(event.stack);
+	process.emit('cleanup');
+	process.exit(99);
+});
+
+
+// * schedule a backup
+async function schedule_backup(logs) {
+	console.log(`Begin schedule backup...`);
+	await backup(logs);
 	console.log(`Will backup again in ${schedule_backup_time}ms or ${schedule_backup_time/(1000*60)} minutes`);
 	setTimeout(schedule_backup, schedule_backup_time);
 }
 
 // * perform backup and clear logs
 function backup(logs) {
-	console.log('Log reach limit write current log to /logs/');
+	console.log('Backup in process...');
 	let log_content = logs.join('\n');
 	let {d, mn, h, m, s} = getCurrentTime();
 	let {day, month, year} = getCurrentDate();
 	writeFile(`./logs/${year}_${month}_${day}-${h}_${m}.log`, log_content)
 	.then(() => {
 		logs = [];
+		console.log('Backup completed...');
 	})
 	.catch(error => {
 		logging(`${error.message}: ${error.error}`);
@@ -81,9 +109,9 @@ function backup(logs) {
 // * log message
 function logging(message) {
 	let {d, mn, h, m, s} = getCurrentTime();
-	let error_message = `${d}/${mn} [${h}:${m}:${s}]: ${message}`;
-	console.log(error_message);
-	logs.push(error_message);
+	let log_message = `${d}/${mn} [${h}:${m}:${s}]: ${message}`;
+	console.log(log_message);
+	logs.push(log_message);
 }
 
 
@@ -92,7 +120,7 @@ function callDio(message) {
 	let author = message.author;
 	let channel = message.channel;
 
-	logging(`${author.username}#${author.tag} execute dio! command`);
+	logging(`${author.tag} execute dio! command`);
 	let index = Math.floor(Math.random() * responseList.length);
 	sendMessage(channel, responseList[index]);
 }
@@ -106,7 +134,7 @@ function cmdDio(message) {
 
 	let cmd = content.substring(content.search(/ /) + 1);
 	let mResponse = {message: '', file: ''};
-	logging(`${author.username}#${author.tag} execute !dio ${cmd} command`);
+	logging(`${author.tag} execute !dio ${cmd} command`);
 	
 	// Regex testing
 	switch(true) {
@@ -116,7 +144,7 @@ function cmdDio(message) {
 			}
 			else {
 				mResponse = {message: errorList['invalid-command'].message.replace('%s', cmd)};
-				logging(`${author.username}#${author.tag} execute invalid command -> !dio ${cmd}`);
+				logging(`${author.tag} execute invalid command -> !dio ${cmd}`);
 			}
 			break;
 		case /restart/.test(cmd):
@@ -134,7 +162,7 @@ function cmdDio(message) {
 			break;
 		default:
 			mResponse = {message: errorList['invalid-command'].message.replace('%s', cmd)};
-			logging(`${author.username}#${author.tag} execute invalid command -> !dio ${cmd}`);
+			logging(`${author.tag} execute invalid command -> !dio ${cmd}`);
 	}
 	sendMessage(channel, mResponse);
 }
