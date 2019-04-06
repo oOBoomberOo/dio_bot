@@ -15,7 +15,7 @@
 		{"message": "", "file": "https://i.imgur.com/al3J1lm.jpg"},
 		{"message": "Jooootaaroo?", "file": "https://pbs.twimg.com/media/Di5TvUyU0AAqhZa.jpg"},
 		{"message": "", "file": "https://i.ytimg.com/vi/cvzPrrjRwQE/maxresdefault.jpg"},
-		{"message": "I'm kinda ran out of Dio meme now -Boomber", "file": "https://i.imgur.com/5nHSDal.jpg"}
+		{"message": "I'm running out of Dio meme now -Boomber", "file": "https://i.imgur.com/5nHSDal.jpg"}
 	],
 	"errors": {
 		"invalid-command": {"message": "You fool! there is no !dio %s"}
