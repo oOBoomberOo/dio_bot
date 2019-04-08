@@ -64,14 +64,14 @@ process.on('exit', () => {
 
 // catch ctrl+c event and exit normally
 process.on('SIGINT', () => {
-	console.log('Ctrl-C...');
+	console.info('Ctrl-C...');
 	process.emit('cleanup');
 	process.exit(2);
 });
 
 //catch uncaught exceptions, trace, then exit normally
 process.on('uncaughtException', event => {
-	console.log('Uncaught Exception...');
+	console.info('Uncaught Exception...');
 	console.log(event.stack);
 	process.emit('cleanup');
 	process.exit(99);
@@ -80,22 +80,28 @@ process.on('uncaughtException', event => {
 
 // * schedule a backup
 async function schedule_backup(logs) {
-	console.log(`Begin schedule backup...`);
-	await backup(logs);
-	console.log(`Will backup again in ${schedule_backup_time}ms or ${schedule_backup_time/(1000*60)} minutes`);
+	console.info(`Begin schedule backup...`);
+	backup(logs);
+	console.info(`Will backup again in ${schedule_backup_time}ms or ${schedule_backup_time/(1000*60)} minutes`);
 	setTimeout(schedule_backup, schedule_backup_time);
 }
 
 // * perform backup and clear logs
 function backup(logs) {
-	console.log('Backup in process...');
-	let log_content = logs.join('\n');
+	console.info('Backup in process...');
+	let log_content;
+	try {
+		log_content = logs.join('\n');
+	} catch (error) {
+		log_content = '';
+		logging(`${error.message}: ${error.error}`);
+	}
 	let {d, mn, h, m, s} = getCurrentTime();
 	let {day, month, year} = getCurrentDate();
 	writeFile(`./logs/${year}_${month}_${day}-${h}_${m}.log`, log_content)
 	.then(() => {
 		logs = [];
-		console.log('Backup completed...');
+		console.info('Backup completed...');
 	})
 	.catch(error => {
 		logging(`${error.message}: ${error.error}`);
