@@ -1,14 +1,16 @@
+// ! Zeit have loggings limit so don't bother logging anything
 const discord = require('discord.js');
-const writeFile = require('write');
 const getJSON = require('get-json');
-const auth = require('./auth.json');
+const http = require('http');
+const auth = process.env.TOKEN;
 const response_list = 'https://raw.githubusercontent.com/oOBoomberOo/dio_bot/master/response_list.json';
 let promise = getJSON(response_list);
 let responseList = [];
 let errorList = [];
-let logs = [];
-let max_logs = 5000;
-let schedule_backup_time = 12*60*60*1000;
+//let logs = [];
+//let max_logs = 5000;
+//let schedule_backup_time = 12*60*60*1000;
+http.createServer().listen(3000);
 let bot = new discord.Client();
 
 // * Start bot only when promise returned
@@ -20,7 +22,7 @@ promise.then(response => {
 	
 	bot.on('ready', () => { 
 		logging(`Bot logged in as ${bot.user.username}<${bot.user.id}>`);
-		schedule_backup(logs);
+		//schedule_backup(logs);
 	});
 	
 	bot.on('message', message => {
@@ -36,22 +38,24 @@ promise.then(response => {
 		else if (content.search(cmd_regex) === 0 && !author.bot && content.split(' ').length > 1) {
 			cmdDio(message);
 		}
-
+		/*
 		if (logs.length > max_logs) {
 			console.log('Log reach limit write current log to /logs/');
 			backup(logs);
-		}
+		}*/
 
 	});
 
 	bot.on('error', error => {
-		logging(`${error.message}: ${error.error}`);
+		throw error;
+		//logging(`${error.message}: ${error.error}`);
 	})
 })
 .catch(error => {
-	logging(`${error.message}: ${error.error}`);
+	throw error;
+	//logging(`${error.message}: ${error.error}`);
 });
-
+/*
 process.on('cleanup', () => {
 	backup(logs);
 });
@@ -77,7 +81,6 @@ process.on('uncaughtException', event => {
 	process.exit(99);
 });
 
-
 // * schedule a backup
 async function schedule_backup(logs) {
 	console.info(`Begin schedule backup...`);
@@ -85,6 +88,7 @@ async function schedule_backup(logs) {
 	console.info(`Will backup again in ${schedule_backup_time}ms or ${schedule_backup_time/(1000*60)} minutes`);
 	setTimeout(schedule_backup, schedule_backup_time);
 }
+
 
 // * perform backup and clear logs
 function backup(logs) {
@@ -108,6 +112,7 @@ function backup(logs) {
 	});
 }
 
+
 // * log message
 function logging(message) {
 	let {d, mn, h, m, s} = getCurrentTime();
@@ -115,6 +120,7 @@ function logging(message) {
 	console.log(log_message);
 	logs.push(log_message);
 }
+*/
 
 
 // * Handle dio! command
@@ -123,7 +129,7 @@ function callDio(message) {
 	let channel = message.channel;
 	let attachment = channel.type === 'dm' ? 'DM': `${message.guild.name}`;
 
-	logging(`${author.tag}<${attachment}> execute dio! command`);
+	//logging(`${author.tag}<${attachment}> execute dio! command`);
 	let index = Math.floor(Math.random() * responseList.length);
 	sendMessage(channel, responseList[index]);
 }
@@ -138,7 +144,7 @@ function cmdDio(message) {
 	let attachment = channel.type === 'dm' ? 'DM': `${message.guild.name}`;
 	let cmd = content.substring(content.search(/ /) + 1);
 	let mResponse = {message: '', file: ''};
-	logging(`${author.tag}<${attachment}> execute !dio ${cmd} command`);
+	//logging(`${author.tag}<${attachment}> execute !dio ${cmd} command`);
 	
 	// Regex testing
 	switch(true) {
@@ -148,7 +154,7 @@ function cmdDio(message) {
 			}
 			else {
 				mResponse = {message: errorList['invalid-command'].message.replace('%s', cmd)};
-				logging(`${author.tag}<${attachment}> execute invalid command -> !dio ${cmd}`);
+				//logging(`${author.tag}<${attachment}> execute invalid command -> !dio ${cmd}`);
 			}
 			break;
 		case /restart/.test(cmd):
@@ -157,7 +163,7 @@ function cmdDio(message) {
 			.then(response => {
 				responseList = response['values'];
 				errorList = response['errors'];
-				backup(logs);
+				//backup(logs);
 				return response;
 			})
 			.catch(error => {
@@ -166,7 +172,7 @@ function cmdDio(message) {
 			break;
 		default:
 			mResponse = {message: errorList['invalid-command'].message.replace('%s', cmd)};
-			logging(`${author.tag}<${attachment}> execute invalid command -> !dio ${cmd}`);
+		//	logging(`${author.tag}<${attachment}> execute invalid command -> !dio ${cmd}`);
 	}
 	sendMessage(channel, mResponse);
 }
@@ -182,7 +188,7 @@ function sendMessage(channel, message) {
 	}
 }
 
-
+/*
 // * Return current time in format {DD, M, hh, mm, ss}
 function getCurrentTime() {
 	let date = new Date();
@@ -213,3 +219,4 @@ function getCurrentDate() {
 	
 	return {day: day, month: month, year: year};
 }
+*/

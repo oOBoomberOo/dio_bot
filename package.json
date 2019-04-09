@@ -11,9 +11,6 @@
   "license": "GPL-3.0",
   "dependencies": {
     "discord.js": "^11.4.2",
-    "get-json": "^1.0.1",
-    "jsonfile": "^5.0.0",
-    "readjson": "^1.1.4",
-    "write": "^1.0.3"
+    "get-json": "^1.0.1"
   }
 }
