@@ -53,23 +53,14 @@ promise.then(response => {
 });
 
 process.on('cleanup', () => {
-	backup(logs);
+	exit_with_backup(logs);
 });
 
-// Copied from stackoverflow
-// do app specific cleaning before exiting
-process.on('exit', () => {
-	process.emit('cleanup');
-});
-
-// catch ctrl+c event and exit normally
 process.on('SIGINT', () => {
 	console.info('Ctrl-C...');
 	process.emit('cleanup');
-	process.exit(2);
 });
 
-//catch uncaught exceptions, trace, then exit normally
 process.on('uncaughtException', event => {
 	console.info('Uncaught Exception...');
 	console.log(event.stack);
@@ -79,7 +70,7 @@ process.on('uncaughtException', event => {
 
 
 // * schedule a backup
-async function schedule_backup(logs) {
+function schedule_backup(logs) {
 	console.info(`Begin schedule backup...`);
 	backup(logs);
 	console.info(`Will backup again in ${schedule_backup_time}ms or ${schedule_backup_time/(1000*60)} minutes`);
@@ -87,7 +78,7 @@ async function schedule_backup(logs) {
 }
 
 // * perform backup and clear logs
-function backup(logs) {
+async function backup(logs) {
 	console.info('Backup in process...');
 	let log_content;
 	try {
@@ -98,14 +89,15 @@ function backup(logs) {
 	}
 	let {d, mn, h, m, s} = getCurrentTime();
 	let {day, month, year} = getCurrentDate();
-	writeFile(`./logs/${year}_${month}_${day}-${h}_${m}.log`, log_content)
-	.then(() => {
-		logs = [];
-		console.info('Backup completed...');
-	})
-	.catch(error => {
-		logging(`${error.message}: ${error.error}`);
-	});
+	await writeFile(`./logs/${year}_${month}_${day}-${h}_${m}.log`, log_content).catch(error => logging(`${error.message}: ${error.error}`));
+	logs = [];
+	console.log('Backup completed');
+	return true;
+}
+
+async function exit_with_backup(logs) {
+	await backup(logs);
+	process.exit(0);
 }
 
 // * log message
