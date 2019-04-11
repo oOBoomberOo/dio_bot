@@ -19,7 +19,8 @@
 		{"message": "https://i.imgur.com/c47AlWu.jpg", "file": ""}
 	],
 	"special": {
-		"fbi": {"message": "https://youtu.be/08vk9g-jcsM"}
+		"fbi": {"message": "https://youtu.be/08vk9g-jcsM"},
+		"about": {"message": "This bot is created by TotallyNotBoomber"}
 	},
 	"errors": {
 		"invalid-command": {"message": "You fool! there is no !dio %s"}
