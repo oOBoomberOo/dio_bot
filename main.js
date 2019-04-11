@@ -1,6 +1,7 @@
 const discord = require('discord.js');
 const writeFile = require('write');
 const getJSON = require('get-json');
+const fetch = require('node-fetch');
 const auth = require('./auth.json');
 const response_list = 'https://raw.githubusercontent.com/oOBoomberOo/dio_bot/master/response_list.json';
 let promise = getJSON(response_list);
@@ -111,7 +112,7 @@ function logging(message) {
 
 
 // * Handle dio! command
-function callDio(message) {
+async function callDio(message) {
 	let author = message.author;
 	let channel = message.channel;
 	let attachment = channel.type === 'dm' ? 'DM': `${message.guild.name}`;
@@ -123,7 +124,7 @@ function callDio(message) {
 
 
 // * Handle !dio command
-function cmdDio(message) {
+async function cmdDio(message) {
 	let author = message.author;
 	let channel = message.channel;
 	let content = message.content;
@@ -160,6 +161,9 @@ function cmdDio(message) {
 		case cmd in specialResponseList:
 			mResponse = specialResponseList[cmd];
 			break;
+		case /weeb/.test(cmd):
+			mResponse = {message: await getRandomReddit('Animemes', 'hot', 25)};
+			break;
 		default:
 			mResponse = {message: errorList['invalid-command'].message.replace('%s', cmd)};
 			logging(`${author.tag}<${attachment}> execute invalid command -> !dio ${cmd}`);
@@ -170,14 +174,21 @@ function cmdDio(message) {
 
 // * Handle object {message: "foo", file: "bar"} and send them
 function sendMessage(channel, message) {
-	if (message.file !== '' || message.file != undefined || message.file != null) {
+	if (message.file !== '' && message.file !== undefined && message.file !== null) {
 		bot.channels.get(channel.id).send(message.message, {file: message.file});
 	}
-	else {
+	else if (message.message) {
 		bot.channels.get(channel.id).send(message.message);
 	}
 }
 
+async function getRandomReddit(sub, type, limit) {
+	let url = `https://reddit.com`;
+	let result = await fetch(`${url}/r/${sub}/${type}.json?limit=${limit}&rawjson=true`).then(response => response.json()).catch(error => {throw error;});
+	let posts = result.data.children;
+	let post = posts[Math.floor(Math.random() * posts.length)].data.permalink;
+	return `${url}${post}`;
+}
 
 // * Return current time in format {DD, M, hh, mm, ss}
 function getCurrentTime() {
