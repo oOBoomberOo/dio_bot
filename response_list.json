@@ -18,6 +18,9 @@
 		{"message": "I'm running out of Dio meme now -Boomber", "file": "https://i.imgur.com/5nHSDal.jpg"},
 		{"message": "https://i.imgur.com/c47AlWu.jpg", "file": ""}
 	],
+	"special": {
+		"fbi": {"message": "https://youtu.be/08vk9g-jcsM"}
+	},
 	"errors": {
 		"invalid-command": {"message": "You fool! there is no !dio %s"}
 	}
