@@ -14,6 +14,7 @@ let bot = new discord.Client();
 // * Start bot only when promise returned
 promise.then(response => {
 	responseList = response['values'];
+	specialResponseList = response['special'];
 	errorList = response['errors'];
 	
 	bot.login(auth.token)
@@ -155,6 +156,9 @@ function cmdDio(message) {
 			.catch(error => {
 				console.log(error);
 			});
+			break;
+		case cmd in specialResponseList:
+			mResponse = specialResponseList[cmd];
 			break;
 		default:
 			mResponse = {message: errorList['invalid-command'].message.replace('%s', cmd)};
