@@ -11,6 +11,8 @@
 		{"message": "You know my power, yet you’re coming closer?"},
 		{"message": "Oh, You're approaching me?"},
 		{"message": "*Psst Psst, https://hanekawa.moe/*"},
+		{"message": "*Psst Psst, https://kaka.moe/*"},
+		{"message": "*Psst Psst, https://megumin.love/*"},
 		{"message": "https://giphy.com/gifs/post-dio-ew1wGEw8p8k5G"},
 		{"message": "", "file": "https://i.imgur.com/al3J1lm.jpg"},
 		{"message": "Jooootaaroo?", "file": "https://pbs.twimg.com/media/Di5TvUyU0AAqhZa.jpg"},
@@ -20,7 +22,10 @@
 	],
 	"special": {
 		"fbi": {"message": "https://youtu.be/08vk9g-jcsM"},
-		"about": {"message": "This bot is created by TotallyNotBoomber"}
+		"about": {"message": "This bot is created by TotallyNotBoomber"},
+		"hanekawa": {"message": "https://hanekawa.moe/"},
+		"shinobu": {"message": "https://kaka.moe/"},
+		"megumin": {"message": "https://megumin.love/"}
 	},
 	"errors": {
 		"invalid-command": {"message": "You fool! there is no !dio %s"}
