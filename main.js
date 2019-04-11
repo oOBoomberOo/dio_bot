@@ -29,7 +29,7 @@ promise.then(response => {
 		let author = message.author;
 		let channel = message.channel;
 		let content = message.content;
-		let dio_regex = /(?!.*`)\bdio[!?](?!.*`)/gi;
+		let dio_regex = /(?!`+.*)dio[!?](?!.*`+)/gi;
 		let cmd_regex = /!dio/i;
 		
 		if (content.search(dio_regex) >= 0 && !author.bot) {
