@@ -9,7 +9,10 @@ let responseList = [];
 let errorList = [];
 let logs = [];
 let max_logs = 5000;
-let schedule_backup_time = 12*60*60*1000;
+let second = 1000;
+let minute = 60 * second;
+let hour = 60 * minute;
+let schedule_backup_time = 12 * hour;
 let bot = new discord.Client();
 
 // * Start bot only when promise returned
@@ -72,11 +75,13 @@ process.on('uncaughtException', event => {
 
 
 // * schedule a backup
-function schedule_backup(logs) {
+function schedule_backup() {
 	console.info(`Begin schedule backup...`);
 	backup(logs);
 	console.info(`Will backup again in ${schedule_backup_time}ms or ${schedule_backup_time/(1000*60)} minutes`);
-	setTimeout(schedule_backup(logs), schedule_backup_time);
+	setTimeout(() => {
+		schedule_backup();
+	}, schedule_backup_time);
 }
 
 // * perform backup and clear logs
