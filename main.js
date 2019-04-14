@@ -76,7 +76,7 @@ function schedule_backup(logs) {
 	console.info(`Begin schedule backup...`);
 	backup(logs);
 	console.info(`Will backup again in ${schedule_backup_time}ms or ${schedule_backup_time/(1000*60)} minutes`);
-	setTimeout(schedule_backup, schedule_backup_time);
+	setTimeout(schedule_backup(logs), schedule_backup_time);
 }
 
 // * perform backup and clear logs
