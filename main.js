@@ -122,7 +122,7 @@ function callDio(message) {
 	logging(`${author.tag}<${attachment}> execute dio! command`);
 	let index = Math.floor(Math.random() * responseList.length);
 	let mResponse = responseList[index];
-	mResponse = formatMessage(mResponse, message);
+	mResponse = formatMessage(mResponse, '', message);
 	sendMessage(channel, mResponse);
 }
 
@@ -143,11 +143,11 @@ async function cmdDio(message) {
 		case /\d+/g.test(cmd):
 			if (parseInt(cmd) < responseList.length) {
 				mResponse = responseList[parseInt(cmd)];
-				mResponse = formatMessage(mResponse, message, cmd);
+				mResponse = formatMessage(mResponse, cmd, message);
 			}
 			else {
 				mResponse = {message: errorList['invalid-command'].message};
-				mResponse = formatMessage(mResponse, message, cmd);
+				mResponse = formatMessage(mResponse, cmd, message);
 				logging(`${author.tag}<${attachment}> execute invalid command -> !dio ${cmd}`);
 			}
 			break;
@@ -161,15 +161,15 @@ async function cmdDio(message) {
 			break;
 		case cmd in specialResponseList:
 			mResponse = specialResponseList[cmd];
-			mResponse = formatMessage(mResponse, message, cmd);
+			mResponse = formatMessage(mResponse, cmd, message);
 			break;
 		case /weeb/.test(cmd):
 			mResponse = {message: await getRandomReddit('Animemes', 'hot', 25)};
-			mResponse = formatMessage(mResponse, message, cmd);
+			mResponse = formatMessage(mResponse, cmd, message);
 			break;
 		default:
 			mResponse = errorList['invalid-command'];
-			mResponse = formatMessage(mResponse, message, cmd);
+			mResponse = formatMessage(mResponse, cmd, message);
 			logging(`${author.tag}<${attachment}> execute invalid command -> !dio ${cmd}`);
 	}
 	sendMessage(channel, mResponse);
@@ -225,12 +225,13 @@ function getCurrentDate() {
 	return {day: day, month: month, year: year};
 }
 
-function formatMessage(content, message, custom = '') {
+function formatMessage(content, message, client) {
+	let result = content;
 	let formatted = content.message;
 	formatted = formatted
-		.replace('%sender%', message.author.name)
-		.replace('%channel%', message.channel)
-		.replace('%message%', custom)
-	content.message = formatted;
-	return content;
+		.replace('%message%', message)
+		.replace('%sender%', client.author.username)
+		.replace('%channel%', client.channel)
+	result.message = formatted;
+	return result;
 }
