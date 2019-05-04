@@ -1,61 +1,59 @@
 const discord = require('discord.js');
 const writeFile = require('write');
-const getJSON = require('get-json');
+const fs = require('fs');
+const promisify = require('promisify');
 const fetch = require('node-fetch');
 const auth = require('./auth.json');
-const response_list = 'https://raw.githubusercontent.com/oOBoomberOo/dio_bot/master/response_list.json';
-let promise = getJSON(response_list);
-let responseList = [];
-let errorList = [];
+const response_list_url = 'https://raw.githubusercontent.com/oOBoomberOo/dio_bot/master/response_list.json';
+
+var responseList = [];
+var specialResponseList = [];
+var errorList = [];
+
 let logs = [];
 let max_logs = 5000;
-let second = 1000;
-let minute = 60 * second;
-let hour = 60 * minute;
-let schedule_backup_time = 12 * hour;
+let schedule_backup_time = 12 * 60 * 60 * 1000;
 let bot = new discord.Client();
 
-// * Start bot only when promise returned
-promise.then(response => {
-	responseList = response['values'];
-	specialResponseList = response['special'];
-	errorList = response['errors'];
-	
-	bot.login(auth.token)
-	
-	bot.on('ready', () => { 
-		logging(`Bot logged in as ${bot.user.username}<${bot.user.id}>`);
-		schedule_backup(logs);
-	});
-	
-	bot.on('message', message => {
-		let author = message.author;
-		let channel = message.channel;
-		let content = message.content;
-		let dio_regex = /(?!`+.*)dio[!?](?!.*`+)/gi;
-		let cmd_regex = /!dio/i;
-		
-		if (content.search(dio_regex) >= 0 && !author.bot) {
-			callDio(message);
-		}
-		else if (content.search(cmd_regex) === 0 && !author.bot && content.split(' ').length > 1) {
-			cmdDio(message);
-		}
+async function getResponse() {
+	let promise = await fetch(response_list_url).then(response => response.json());
+	responseList = promise['values'];
+	specialResponseList = promise['special'];
+	errorList = promise['errors'];
+}
 
-		if (logs.length > max_logs) {
-			console.log('Log reach limit write current log to /logs/');
-			backup(logs);
-		}
+bot.login(auth.token)
 
-	});
-
-	bot.on('error', error => {
-		logging(`${error.message}: ${error.error}`);
-	})
-})
-.catch(error => {
-	logging(`${error.message}: ${error.error}`);
+bot.on('ready', () => {
+	getResponse();
+	logging(`Bot logged in as ${bot.user.username}<${bot.user.id}>`);
+	schedule_backup(logs);
 });
+
+bot.on('message', message => {
+	let author = message.author;
+	let channel = message.channel;
+	let content = message.content;
+	let dio_regex = /(?!`+.*)dio[!?](?!.*`+)/gi;
+	let cmd_regex = /!dio/i;
+	
+	if (content.search(dio_regex) >= 0 && !author.bot) {
+		callDio(message);
+	}
+	else if (content.search(cmd_regex) === 0 && !author.bot && content.split(' ').length > 1) {
+		cmdDio(message);
+	}
+
+	if (logs.length > max_logs) {
+		console.log('Log reach limit write current log to /logs/');
+		backup(logs);
+	}
+
+});
+
+bot.on('error', error => {
+	logging(`${error.message}: ${error.error}`);
+})
 
 process.on('cleanup', () => {
 	exit_with_backup(logs);
@@ -72,7 +70,6 @@ process.on('uncaughtException', event => {
 	process.emit('cleanup');
 	process.exit(99);
 });
-
 
 // * schedule a backup
 function schedule_backup() {
@@ -117,14 +114,16 @@ function logging(message) {
 
 
 // * Handle dio! command
-async function callDio(message) {
+function callDio(message) {
 	let author = message.author;
 	let channel = message.channel;
 	let attachment = channel.type === 'dm' ? 'DM': `${message.guild.name}`;
 
 	logging(`${author.tag}<${attachment}> execute dio! command`);
 	let index = Math.floor(Math.random() * responseList.length);
-	sendMessage(channel, responseList[index]);
+	let mResponse = responseList[index];
+	mResponse = formatMessage(mResponse, message);
+	sendMessage(channel, mResponse);
 }
 
 
@@ -141,36 +140,36 @@ async function cmdDio(message) {
 	
 	// Regex testing
 	switch(true) {
-		case /\d/g.test(cmd):
+		case /\d+/g.test(cmd):
 			if (parseInt(cmd) < responseList.length) {
 				mResponse = responseList[parseInt(cmd)];
+				mResponse = formatMessage(mResponse, message, cmd);
 			}
 			else {
-				mResponse = {message: errorList['invalid-command'].message.replace('%s', cmd)};
+				mResponse = {message: errorList['invalid-command'].message};
+				mResponse = formatMessage(mResponse, message, cmd);
 				logging(`${author.tag}<${attachment}> execute invalid command -> !dio ${cmd}`);
 			}
 			break;
 		case /restart/.test(cmd):
 			mResponse.message = 'Restarting...';
-			getJSON(response_list)
-			.then(response => {
-				responseList = response['values'];
-				errorList = response['errors'];
-				backup(logs);
-				return response;
-			})
-			.catch(error => {
-				console.log(error);
-			});
+			let data = await fetch(response_list_url).then(response => response.json());
+			responseList = data['values'];
+			specialResponseList = data['special'];
+			errorList = data['error'];
+			backup(logs);
 			break;
 		case cmd in specialResponseList:
 			mResponse = specialResponseList[cmd];
+			mResponse = formatMessage(mResponse, message, cmd);
 			break;
 		case /weeb/.test(cmd):
 			mResponse = {message: await getRandomReddit('Animemes', 'hot', 25)};
+			mResponse = formatMessage(mResponse, message, cmd);
 			break;
 		default:
-			mResponse = {message: errorList['invalid-command'].message.replace('%s', cmd)};
+			mResponse = errorList['invalid-command'];
+			mResponse = formatMessage(mResponse, message, cmd);
 			logging(`${author.tag}<${attachment}> execute invalid command -> !dio ${cmd}`);
 	}
 	sendMessage(channel, mResponse);
@@ -224,4 +223,14 @@ function getCurrentDate() {
 	month = (month < 10 ? '0': '') + month;
 	
 	return {day: day, month: month, year: year};
+}
+
+function formatMessage(content, message, custom = '') {
+	let formatted = content.message;
+	formatted = formatted
+		.replace('%sender%', message.author.name)
+		.replace('%channel%', message.channel)
+		.replace('%message%', custom)
+	content.message = formatted;
+	return content;
 }

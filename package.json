@@ -1,11 +1,10 @@
 {
   "name": "dio_bot",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "You were expecting description but it was me, DIO!",
   "main": "main.js",
   "scripts": {
-    "start": "node main.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node main.js"
   },
   "author": "Boomber",
   "license": "GPL-3.0",
@@ -14,6 +13,7 @@
     "get-json": "^1.0.1",
     "jsonfile": "^5.0.0",
     "node-fetch": "^2.3.0",
+    "promisify": "0.0.3",
     "readjson": "^1.1.4",
     "write": "^1.0.3"
   }
