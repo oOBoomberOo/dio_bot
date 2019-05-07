@@ -227,7 +227,7 @@ function getCurrentDate() {
 }
 
 function formatMessage(content, message, client) {
-	let result = {message: content.message, file: content.file};
+	let result = {message: content.message ? content.message: '', file: content.file ? content.file: ''};
 	let formatted = content.message;
 	formatted = formatted
 		.replace('%message%', message)
