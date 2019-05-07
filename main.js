@@ -76,6 +76,7 @@ function schedule_backup() {
 	console.info(`Begin schedule backup...`);
 	backup(logs);
 	console.info(`Will backup again in ${schedule_backup_time}ms or ${schedule_backup_time/(1000*60)} minutes`);
+	clearTimeout();
 	setTimeout(() => {
 		schedule_backup();
 	}, schedule_backup_time);
@@ -146,7 +147,7 @@ async function cmdDio(message) {
 				mResponse = formatMessage(mResponse, cmd, message);
 			}
 			else {
-				mResponse = {message: errorList['invalid-command'].message};
+				mResponse = errorList['invalid-command'];
 				mResponse = formatMessage(mResponse, cmd, message);
 				logging(`${author.tag}<${attachment}> execute invalid command -> !dio ${cmd}`);
 			}
@@ -156,7 +157,7 @@ async function cmdDio(message) {
 			let data = await fetch(response_list_url).then(response => response.json());
 			responseList = data['values'];
 			specialResponseList = data['special'];
-			errorList = data['error'];
+			errorList = data['errors'];
 			backup(logs);
 			break;
 		case cmd in specialResponseList:
@@ -226,7 +227,7 @@ function getCurrentDate() {
 }
 
 function formatMessage(content, message, client) {
-	let result = content;
+	let result = {message: content.message, file: content.file};
 	let formatted = content.message;
 	formatted = formatted
 		.replace('%message%', message)
