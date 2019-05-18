@@ -15,6 +15,8 @@ let max_logs = 5000;
 let schedule_backup_time = 12 * 60 * 60 * 1000;
 let bot = new discord.Client();
 
+schedule_backup();
+
 async function getResponse() {
 	let promise = await fetch(response_list_url).then(response => response.json());
 	responseList = promise['values'];
@@ -27,7 +29,6 @@ bot.login(auth.token)
 bot.on('ready', () => {
 	getResponse();
 	logging(`Bot logged in as ${bot.user.username}<${bot.user.id}>`);
-	schedule_backup(logs);
 });
 
 bot.on('message', message => {
@@ -74,7 +75,9 @@ process.on('uncaughtException', event => {
 // * schedule a backup
 function schedule_backup() {
 	console.info(`Begin schedule backup...`);
-	backup(logs);
+	if (logs) {
+		backup(logs);
+	}
 	console.info(`Will backup again in ${schedule_backup_time}ms or ${schedule_backup_time/(1000*60)} minutes`);
 	clearTimeout();
 	setTimeout(() => {
